@@ -1,13 +1,10 @@
 use bevy::prelude::*;
-// use pathfinding::prelude::{astar, bfs, dijkstra};
 
-pub const MAP_WIDTH: i32 = 10;
-pub const MAP_HEIGHT: i32 = 10;
+pub const MAP_WIDTH: i32 = 64;
+pub const MAP_HEIGHT: i32 = 64;
 
 /// === Events ===
-pub struct MapUpdatedEvent {
-    pub(crate) path: Vec<Position>,
-}
+pub struct MapUpdatedEvent {}
 
 #[derive(Debug)]
 pub struct Map {
@@ -40,18 +37,31 @@ impl Map {
             for dx in -1..=1 {
                 let x = position.0 + dx;
                 let y = position.1 + dy;
-                if dx == 0 && dy == 0 { continue; } // Exclude current position.
+                if dx == 0 && dy == 0 {
+                    continue;
+                } // Exclude current position.
                 if !self.allow_diagonals {
-                    if (dx + dy).abs() != 1 { continue; } // Exclude diagonals.
+                    if (dx + dy).abs() != 1 {
+                        continue;
+                    } // Exclude diagonals.
                 }
-                if x < 0 || x > self.width - 1 { continue; } // Make sure we are within width bounds.
-                if y < 0 || y > self.height - 1 { continue; } // Make sure we are within height bounds.
+                if x < 0 || x > self.width - 1 {
+                    continue;
+                } // Make sure we are within width bounds.
+                if y < 0 || y > self.height - 1 {
+                    continue;
+                } // Make sure we are within height bounds.
 
                 let neighbor_position = Position(x, y);
                 let neighbor_index = self.xy_idx(x, y);
-                if self.blocked[neighbor_index] { continue; }
+                if self.blocked[neighbor_index] {
+                    continue;
+                }
                 let neighbor_cost = self.costs[neighbor_index];
-                successors.push(Successor { position: neighbor_position, cost: neighbor_cost })
+                successors.push(Successor {
+                    position: neighbor_position,
+                    cost: neighbor_cost,
+                })
             }
         }
 
@@ -70,13 +80,6 @@ pub struct Successor {
 
 pub fn setup_map(mut commands: Commands) {
     println!("Setup Map...");
-    let mut map = Map::new(5, 5, true);
-    map.blocked = vec![
-        false, false, false, true, false,
-        false, true, false, false, false,
-        false, true, false, false, false,
-        false, true, false, false, false,
-        false, false, false, true, false,
-    ];
+    let mut map = Map::new(MAP_WIDTH, MAP_HEIGHT, false);
     commands.insert_resource(map);
 }

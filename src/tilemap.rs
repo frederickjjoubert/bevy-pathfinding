@@ -1,12 +1,11 @@
+use super::{GameState, MapUpdatedEvent, Position};
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use bevy_rapier2d::prelude::*;
-use crate::{GameState, MapUpdatedEvent, Position};
 
-use super::{MAP_HEIGHT, MAP_WIDTH, Map};
+use super::{Map, MAP_HEIGHT, MAP_WIDTH};
 
 pub const TILE_SIZE: i32 = 32;
-
 
 /// === Helper Functions ===
 #[must_use]
@@ -92,8 +91,8 @@ pub fn draw_tilemap(
     tile_storage_query: Query<&TileStorage>,
     mut tile_texture_query: Query<&mut TileTexture>,
     map: Res<Map>,
-    game_state: Res<GameState>)
-{
+    game_state: Res<GameState>,
+) {
     for map_updated_event in map_updated_event_reader.iter() {
         println!("Drawing tilemap...");
         if let Ok(tile_storage) = tile_storage_query.get_single() {
@@ -101,9 +100,7 @@ pub fn draw_tilemap(
                 for i in 0..map.width {
                     let tile_position = TilePos::new(i as u32, j as u32);
                     if let Some(tile_entity) = tile_storage.get(&tile_position) {
-                        if let Ok(mut tile_texture) =
-                        tile_texture_query.get_mut(tile_entity)
-                        {
+                        if let Ok(mut tile_texture) = tile_texture_query.get_mut(tile_entity) {
                             let index = map.xy_idx(i, j);
                             if map.blocked[index] {
                                 tile_texture.0 = 2;
@@ -114,12 +111,10 @@ pub fn draw_tilemap(
                     }
                 }
             }
-            for point in &map_updated_event.path {
+            for point in &game_state.path {
                 let tile_position = TilePos::new(point.0 as u32, point.1 as u32);
                 if let Some(tile_entity) = tile_storage.get(&tile_position) {
-                    if let Ok(mut tile_texture) =
-                    tile_texture_query.get_mut(tile_entity)
-                    {
+                    if let Ok(mut tile_texture) = tile_texture_query.get_mut(tile_entity) {
                         tile_texture.0 = 5;
                     }
                 }
@@ -127,22 +122,17 @@ pub fn draw_tilemap(
             let start: &Position = &game_state.start;
             let tile_position = TilePos::new(start.0 as u32, start.1 as u32);
             if let Some(tile_entity) = tile_storage.get(&tile_position) {
-                if let Ok(mut tile_texture) =
-                tile_texture_query.get_mut(tile_entity)
-                {
+                if let Ok(mut tile_texture) = tile_texture_query.get_mut(tile_entity) {
                     tile_texture.0 = 3;
                 }
             }
             let goal: &Position = &game_state.goal;
-            let tile_position = TilePos::new(goal.0 as u32, start.1 as u32);
+            let tile_position = TilePos::new(goal.0 as u32, goal.1 as u32);
             if let Some(tile_entity) = tile_storage.get(&tile_position) {
-                if let Ok(mut tile_texture) =
-                tile_texture_query.get_mut(tile_entity)
-                {
+                if let Ok(mut tile_texture) = tile_texture_query.get_mut(tile_entity) {
                     tile_texture.0 = 4;
                 }
             }
         }
     }
 }
-

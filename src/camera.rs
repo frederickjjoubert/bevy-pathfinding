@@ -73,7 +73,6 @@ pub fn camera_movement_system(
     // println!("Camera Position: {:?}", camera_transform.translation);
 }
 
-
 // References
 // 1. Orthographic Projection Scale for Zooming
 // https://docs.rs/bevy/latest/bevy/render/camera/struct.OrthographicProjection.html
