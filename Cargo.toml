@@ -1,0 +1,28 @@
+[package]
+name = "bevy-pathfinding"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+# Enable only a small amount of optimization in debug mode
+[profile.dev]
+opt-level = 1
+
+# Enable high optimizations for dependencies (incl. Bevy), but not for our code:
+[profile.dev.package."*"]
+opt-level = 3
+
+# Note I added the above optimizations and dynamic linking feature for Bevy following the Bevy setup: https://bevyengine.org/learn/book/getting-started/setup/
+
+[dependencies]
+bevy_ecs_tilemap = "0.7.*" # https://crates.io/crates/bevy_ecs_tilemap
+bevy-inspector-egui = "0.12.*"
+bevy_rapier2d = { version = "0.16.*", features = ["debug-render", "serde-serialize", "simd-stable"] } # https://crates.io/crates/bevy_rapier2d
+pathfinding = "3.0.*" # https://crates.io/crates/pathfinding
+rand = "*" # https://crates.io/crates/rand
+
+# Guide https://bevy-cheatbook.github.io/setup/bevy-config.html
+[dependencies.bevy]
+version = "0.8.*"
+
