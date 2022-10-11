@@ -1,8 +1,7 @@
-use crate::{PlacementMode, ResetEvent, SolveEvent, StepEvent};
 use bevy::prelude::*;
 use bevy::ui::Display::Flex;
 
-use super::GameState;
+use super::{ClearEvent, GameState, PlacementMode, ResetEvent, SolveEvent, StepEvent};
 
 const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
 const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
@@ -10,13 +9,13 @@ const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
 
 // === Components ===
 #[derive(Component, Debug)]
-pub struct PathButton {}
+pub struct OpenButton {}
 
 #[derive(Component, Debug)]
 pub struct ObstacleButton {}
 
 #[derive(Component, Debug)]
-pub struct StartButton {}
+pub struct OriginButton {}
 
 #[derive(Component, Debug)]
 pub struct GoalButton {}
@@ -29,6 +28,9 @@ pub struct SolveButton {}
 
 #[derive(Component, Debug)]
 pub struct ResetButton {}
+
+#[derive(Component, Debug)]
+pub struct ClearButton {}
 
 #[derive(Component, Debug)]
 pub struct CurrentAlgorithmText {}
@@ -133,36 +135,36 @@ pub fn setup_user_interface(mut commands: Commands, asset_server: Res<AssetServe
         .insert(Name::new("Top Container"))
         .id();
 
-    // Path Button
-    let path_button_container = commands
+    // Open Button
+    let open_button_container = commands
         .spawn_bundle(NodeBundle {
             style: button_container_style.clone(),
             color: Color::NONE.into(),
             ..default()
         })
-        .insert(Name::new("Path Button Container"))
+        .insert(Name::new("Open Button Container"))
         .id();
 
-    let path_button = commands
+    let open_button = commands
         .spawn_bundle(ButtonBundle {
             style: button_style.clone(),
             color: Color::rgb(0.15, 0.15, 0.15).into(),
             ..default()
         })
-        .insert(Name::new("Path Button"))
-        .insert(PathButton {})
+        .insert(Name::new("Open Button"))
+        .insert(OpenButton {})
         .id();
 
-    let path_button_text = commands
+    let open_button_text = commands
         .spawn_bundle(TextBundle::from_section("Open", button_text_style.clone()))
         .id();
 
     commands
-        .entity(path_button)
-        .push_children(&[path_button_text]);
+        .entity(open_button)
+        .push_children(&[open_button_text]);
     commands
-        .entity(path_button_container)
-        .push_children(&[path_button]);
+        .entity(open_button_container)
+        .push_children(&[open_button]);
 
     // Obstacle Button
     let obstacle_button_container = commands
@@ -198,36 +200,39 @@ pub fn setup_user_interface(mut commands: Commands, asset_server: Res<AssetServe
         .entity(obstacle_button_container)
         .push_children(&[obstacle_button]);
 
-    // Start Button
-    let start_button_container = commands
+    // Origin Button
+    let origin_button_container = commands
         .spawn_bundle(NodeBundle {
             style: button_container_style.clone(),
             color: Color::NONE.into(),
             ..default()
         })
-        .insert(Name::new("Start Button Container"))
+        .insert(Name::new("Origin Button Container"))
         .id();
 
-    let start_button = commands
+    let origin_button = commands
         .spawn_bundle(ButtonBundle {
             style: button_style.clone(),
             color: Color::rgb(0.15, 0.15, 0.15).into(),
             ..default()
         })
-        .insert(Name::new("Start Button"))
-        .insert(StartButton {})
+        .insert(Name::new("Origin Button"))
+        .insert(OriginButton {})
         .id();
 
-    let start_button_text = commands
-        .spawn_bundle(TextBundle::from_section("Start", button_text_style.clone()))
+    let origin_button_text = commands
+        .spawn_bundle(TextBundle::from_section(
+            "Origin",
+            button_text_style.clone(),
+        ))
         .id();
 
     commands
-        .entity(start_button)
-        .push_children(&[start_button_text]);
+        .entity(origin_button)
+        .push_children(&[origin_button_text]);
     commands
-        .entity(start_button_container)
-        .push_children(&[start_button]);
+        .entity(origin_button_container)
+        .push_children(&[origin_button]);
 
     // Goal Button
     let goal_button_container = commands
@@ -261,9 +266,9 @@ pub fn setup_user_interface(mut commands: Commands, asset_server: Res<AssetServe
         .push_children(&[goal_button]);
 
     commands.entity(bottom_container).push_children(&[
-        path_button_container,
+        open_button_container,
         obstacle_button_container,
-        start_button_container,
+        origin_button_container,
         goal_button_container,
     ]);
 
@@ -359,6 +364,37 @@ pub fn setup_user_interface(mut commands: Commands, asset_server: Res<AssetServe
     commands
         .entity(reset_button_container)
         .push_children(&[reset_button]);
+
+    // Clear Button
+    let clear_button_container = commands
+        .spawn_bundle(NodeBundle {
+            style: button_container_style.clone(),
+            color: Color::NONE.into(),
+            ..default()
+        })
+        .insert(Name::new("Clear Button Container"))
+        .id();
+
+    let clear_button = commands
+        .spawn_bundle(ButtonBundle {
+            style: button_style.clone(),
+            color: Color::rgb(0.15, 0.15, 0.15).into(),
+            ..default()
+        })
+        .insert(Name::new("Clear Button"))
+        .insert(ClearButton {})
+        .id();
+
+    let clear_button_text = commands
+        .spawn_bundle(TextBundle::from_section("Clear", button_text_style.clone()))
+        .id();
+
+    commands
+        .entity(clear_button)
+        .push_children(&[clear_button_text]);
+    commands
+        .entity(clear_button_container)
+        .push_children(&[clear_button]);
 
     // Title
     let title_container = commands
@@ -525,6 +561,7 @@ pub fn setup_user_interface(mut commands: Commands, asset_server: Res<AssetServe
         step_button_container,
         solve_button_container,
         reset_button_container,
+        clear_button_container,
         title_container,
         algorithm_cycler_container,
     ]);
@@ -534,12 +571,9 @@ pub fn setup_user_interface(mut commands: Commands, asset_server: Res<AssetServe
         .push_children(&[bottom_container, spacer, top_container]);
 }
 
-pub fn path_button_system(
+pub fn open_button_system(
     mut user_interface_interaction_event_writer: EventWriter<UserInterfaceInteractionEvent>,
-    mut path_button_query: Query<
-        (&Interaction, &mut UiColor),
-        (Changed<Interaction>, With<PathButton>),
-    >,
+    mut path_button_query: Query<(&Interaction, &mut UiColor), With<OpenButton>>,
     mut game_state: ResMut<GameState>,
 ) {
     for (interaction, mut color) in path_button_query.iter_mut() {
@@ -551,6 +585,7 @@ pub fn path_button_system(
             }
             Interaction::Hovered => {
                 *color = HOVERED_BUTTON.into();
+                user_interface_interaction_event_writer.send(UserInterfaceInteractionEvent {});
             }
             Interaction::None => {
                 *color = NORMAL_BUTTON.into();
@@ -561,10 +596,7 @@ pub fn path_button_system(
 
 pub fn obstacle_button_system(
     mut user_interface_interaction_event_writer: EventWriter<UserInterfaceInteractionEvent>,
-    mut obstacle_button_query: Query<
-        (&Interaction, &mut UiColor),
-        (Changed<Interaction>, With<ObstacleButton>),
-    >,
+    mut obstacle_button_query: Query<(&Interaction, &mut UiColor), With<ObstacleButton>>,
     mut game_state: ResMut<GameState>,
 ) {
     for (interaction, mut color) in obstacle_button_query.iter_mut() {
@@ -576,6 +608,7 @@ pub fn obstacle_button_system(
             }
             Interaction::Hovered => {
                 *color = HOVERED_BUTTON.into();
+                user_interface_interaction_event_writer.send(UserInterfaceInteractionEvent {});
             }
             Interaction::None => {
                 *color = NORMAL_BUTTON.into();
@@ -586,10 +619,7 @@ pub fn obstacle_button_system(
 
 pub fn start_button_system(
     mut user_interface_interaction_event_writer: EventWriter<UserInterfaceInteractionEvent>,
-    mut start_button_query: Query<
-        (&Interaction, &mut UiColor),
-        (Changed<Interaction>, With<StartButton>),
-    >,
+    mut start_button_query: Query<(&Interaction, &mut UiColor), With<OriginButton>>,
     mut game_state: ResMut<GameState>,
 ) {
     for (interaction, mut color) in start_button_query.iter_mut() {
@@ -601,6 +631,7 @@ pub fn start_button_system(
             }
             Interaction::Hovered => {
                 *color = HOVERED_BUTTON.into();
+                user_interface_interaction_event_writer.send(UserInterfaceInteractionEvent {});
             }
             Interaction::None => {
                 *color = NORMAL_BUTTON.into();
@@ -611,10 +642,7 @@ pub fn start_button_system(
 
 pub fn goal_button_system(
     mut user_interface_interaction_event_writer: EventWriter<UserInterfaceInteractionEvent>,
-    mut goal_button_query: Query<
-        (&Interaction, &mut UiColor),
-        (Changed<Interaction>, With<GoalButton>),
-    >,
+    mut goal_button_query: Query<(&Interaction, &mut UiColor), With<GoalButton>>,
     mut game_state: ResMut<GameState>,
 ) {
     for (interaction, mut color) in goal_button_query.iter_mut() {
@@ -626,6 +654,7 @@ pub fn goal_button_system(
             }
             Interaction::Hovered => {
                 *color = HOVERED_BUTTON.into();
+                user_interface_interaction_event_writer.send(UserInterfaceInteractionEvent {});
             }
             Interaction::None => {
                 *color = NORMAL_BUTTON.into();
@@ -637,10 +666,7 @@ pub fn goal_button_system(
 pub fn step_button_system(
     mut user_interface_interaction_event_writer: EventWriter<UserInterfaceInteractionEvent>,
     mut step_event_writer: EventWriter<StepEvent>,
-    mut step_button_query: Query<
-        (&Interaction, &mut UiColor),
-        (Changed<Interaction>, With<StepButton>),
-    >,
+    mut step_button_query: Query<(&Interaction, &mut UiColor), With<StepButton>>,
 ) {
     for (interaction, mut color) in step_button_query.iter_mut() {
         match *interaction {
@@ -651,6 +677,7 @@ pub fn step_button_system(
             }
             Interaction::Hovered => {
                 *color = HOVERED_BUTTON.into();
+                user_interface_interaction_event_writer.send(UserInterfaceInteractionEvent {});
             }
             Interaction::None => {
                 *color = NORMAL_BUTTON.into();
@@ -662,20 +689,18 @@ pub fn step_button_system(
 pub fn solve_button_system(
     mut user_interface_interaction_event_writer: EventWriter<UserInterfaceInteractionEvent>,
     mut solve_event_writer: EventWriter<SolveEvent>,
-    mut solve_button_query: Query<
-        (&Interaction, &mut UiColor),
-        (Changed<Interaction>, With<SolveButton>),
-    >,
+    mut solve_button_query: Query<(&Interaction, &mut UiColor), (With<SolveButton>)>,
 ) {
     for (interaction, mut color) in solve_button_query.iter_mut() {
         match *interaction {
             Interaction::Clicked => {
                 *color = PRESSED_BUTTON.into();
+                solve_event_writer.send(SolveEvent {});
                 user_interface_interaction_event_writer.send(UserInterfaceInteractionEvent {});
-                solve_event_writer.send(SolveEvent {})
             }
             Interaction::Hovered => {
                 *color = HOVERED_BUTTON.into();
+                user_interface_interaction_event_writer.send(UserInterfaceInteractionEvent {});
             }
             Interaction::None => {
                 *color = NORMAL_BUTTON.into();
@@ -687,11 +712,7 @@ pub fn solve_button_system(
 pub fn reset_button_system(
     mut user_interface_interaction_event_writer: EventWriter<UserInterfaceInteractionEvent>,
     mut reset_event_writer: EventWriter<ResetEvent>,
-    mut reset_button_query: Query<
-        (&Interaction, &mut UiColor),
-        (Changed<Interaction>, With<ResetButton>),
-    >,
-    mut game_state: ResMut<GameState>,
+    mut reset_button_query: Query<(&Interaction, &mut UiColor), With<ResetButton>>,
 ) {
     for (interaction, mut color) in reset_button_query.iter_mut() {
         match *interaction {
@@ -702,6 +723,30 @@ pub fn reset_button_system(
             }
             Interaction::Hovered => {
                 *color = HOVERED_BUTTON.into();
+                user_interface_interaction_event_writer.send(UserInterfaceInteractionEvent {});
+            }
+            Interaction::None => {
+                *color = NORMAL_BUTTON.into();
+            }
+        }
+    }
+}
+
+pub fn clear_button_system(
+    mut user_interface_interaction_event_writer: EventWriter<UserInterfaceInteractionEvent>,
+    mut clear_event_writer: EventWriter<ClearEvent>,
+    mut reset_button_query: Query<(&Interaction, &mut UiColor), With<ClearButton>>,
+) {
+    for (interaction, mut color) in reset_button_query.iter_mut() {
+        match *interaction {
+            Interaction::Clicked => {
+                *color = PRESSED_BUTTON.into();
+                user_interface_interaction_event_writer.send(UserInterfaceInteractionEvent {});
+                clear_event_writer.send(ClearEvent {});
+            }
+            Interaction::Hovered => {
+                *color = HOVERED_BUTTON.into();
+                user_interface_interaction_event_writer.send(UserInterfaceInteractionEvent {});
             }
             Interaction::None => {
                 *color = NORMAL_BUTTON.into();

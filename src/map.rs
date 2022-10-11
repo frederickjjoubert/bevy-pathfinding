@@ -6,6 +6,7 @@ pub const MAP_HEIGHT: i32 = 64;
 /// === Events ===
 pub struct MapUpdatedEvent {}
 
+/// === Resources ===
 #[derive(Debug)]
 pub struct Map {
     pub width: i32,
@@ -78,6 +79,7 @@ pub struct Successor {
     pub cost: Option<i32>,
 }
 
+/// === Systems ===
 pub fn setup_map(mut commands: Commands) {
     println!("Setup Map...");
     let mut map = Map::new(MAP_WIDTH, MAP_HEIGHT, false);

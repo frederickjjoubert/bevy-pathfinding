@@ -94,7 +94,7 @@ pub fn draw_tilemap(
     game_state: Res<GameState>,
 ) {
     for map_updated_event in map_updated_event_reader.iter() {
-        println!("Drawing tilemap...");
+        // println!("Drawing tilemap...");
         if let Ok(tile_storage) = tile_storage_query.get_single() {
             for j in 0..map.height {
                 for i in 0..map.width {

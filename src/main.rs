@@ -23,12 +23,12 @@ pub use physics::*;
 pub use tilemap::*;
 pub use user_interface::*;
 
-// #[derive(Debug, Clone, PartialEq, Eq, Hash, SystemLabel)]
-// enum Setup {
-//     Game,
-//     Map,
-//     DrawMap,
-// }
+#[derive(Debug, Clone, PartialEq, Eq, Hash, SystemLabel)]
+enum Setup {
+    Game,
+    Map,
+    TileMap,
+}
 
 fn main() {
     App::new()
@@ -53,11 +53,17 @@ fn main() {
         .add_event::<StepEvent>()
         .add_event::<SolveEvent>()
         .add_event::<ResetEvent>()
+        .add_event::<ClearEvent>()
         .add_startup_system(setup_physics)
-        .add_startup_system(setup_map)
-        .add_startup_system(setup_tilemap)
+        .add_startup_system(setup_map.label(Setup::Map))
+        .add_startup_system(setup_tilemap.label(Setup::TileMap))
         .add_startup_system(setup_mouse)
-        .add_startup_system(setup_game)
+        .add_startup_system(
+            setup_game
+                .label(Setup::Game)
+                .after(Setup::Map)
+                .after(Setup::TileMap),
+        )
         .add_startup_system(setup_camera)
         .add_startup_system(setup_user_interface)
         .add_system(draw_tilemap)
@@ -65,15 +71,18 @@ fn main() {
         .add_system(step_system)
         .add_system(solve_system)
         .add_system(reset_system)
+        .add_system(clear_system)
         .add_system(camera_movement_system)
-        .add_system(update_mouse)
+        .add_system(update_mouse_position)
+        .add_system(update_mouse_input)
         .add_system(process_mouse_events)
-        .add_system(path_button_system)
+        .add_system(open_button_system)
         .add_system(obstacle_button_system)
         .add_system(start_button_system)
         .add_system(goal_button_system)
         .add_system(step_button_system)
         .add_system(solve_button_system)
         .add_system(reset_button_system)
+        .add_system(clear_button_system)
         .run();
 }

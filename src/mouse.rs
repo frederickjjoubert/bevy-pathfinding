@@ -5,6 +5,9 @@ pub struct Mouse {
     pub is_in_window: bool,
     pub window_position: Vec2,
     pub world_position: Vec2,
+    pub holding_lmb: bool,
+    pub holding_mmb: bool,
+    pub holding_rmb: bool,
 }
 
 pub fn setup_mouse(mut commands: Commands) {
@@ -12,10 +15,13 @@ pub fn setup_mouse(mut commands: Commands) {
         is_in_window: false,
         window_position: Default::default(),
         world_position: Default::default(),
+        holding_lmb: false,
+        holding_mmb: false,
+        holding_rmb: false,
     })
 }
 
-pub fn update_mouse(
+pub fn update_mouse_position(
     mut mouse: ResMut<Mouse>,
     windows: Res<Windows>,
     camera_query: Query<(&Camera, &GlobalTransform)>,
@@ -52,6 +58,27 @@ pub fn update_mouse(
     } else {
         // Cursor is not inside the window.
         mouse.is_in_window = false;
+    }
+}
+
+pub fn update_mouse_input(mut mouse: ResMut<Mouse>, mouse_input: Res<Input<MouseButton>>) {
+    // Left Mouse Button
+    if mouse_input.just_pressed(MouseButton::Left) {
+        mouse.holding_lmb = true;
+    } else if mouse_input.just_released(MouseButton::Left) {
+        mouse.holding_lmb = false;
+    }
+    // Middle Mouse Button
+    if mouse_input.just_pressed(MouseButton::Middle) {
+        mouse.holding_mmb = true;
+    } else if mouse_input.just_released(MouseButton::Middle) {
+        mouse.holding_mmb = false;
+    }
+    // Right Mouse Button
+    if mouse_input.just_pressed(MouseButton::Right) {
+        mouse.holding_rmb = true;
+    } else if mouse_input.just_released(MouseButton::Right) {
+        mouse.holding_rmb = false;
     }
 }
 
