@@ -5,9 +5,9 @@ use super::{
     world_position_to_index, Map, MapUpdatedEvent, Mouse, Position, UserInterfaceInteractionEvent,
 };
 
-#[derive(Debug)]
-pub enum PathfindingMode {
-    Astar,
+#[derive(Clone, Copy, Debug)]
+pub enum PathfindingAlgorithm {
+    AStar,
     BFS,
     Dijkstra,
 }
@@ -24,7 +24,7 @@ pub enum PlacementMode {
 
 #[derive(Debug)]
 pub struct GameState {
-    pub pathfinding_mode: PathfindingMode,
+    pub pathfinding_algorithm: PathfindingAlgorithm,
     pub placement_mode: PlacementMode,
     pub start: Position,
     pub goal: Position,
@@ -41,6 +41,16 @@ pub struct ResetEvent {}
 
 pub struct ClearEvent {}
 
+pub struct CycleAlgorithmLeftEvent {}
+
+pub struct CycleAlgorithmRightEvent {}
+
+pub struct PathfindingAlgorithmSelectionChangedEvent {
+    pub pathfinding_algorithm: PathfindingAlgorithm,
+}
+
+pub struct PathfindingAlgorithmChangedEvent {}
+
 // === Systems ===
 pub fn setup_game(
     mut commands: Commands,
@@ -48,7 +58,7 @@ pub fn setup_game(
 ) {
     println!("Setup Game...");
     commands.insert_resource(GameState {
-        pathfinding_mode: PathfindingMode::BFS,
+        pathfinding_algorithm: PathfindingAlgorithm::BFS,
         placement_mode: PlacementMode::Obstacle,
         start: Position(16, 32),
         goal: Position(48, 32),
@@ -166,5 +176,30 @@ pub fn clear_system(
         game_state.path = Vec::new();
         map.blocked = vec![false; (map.width * map.height) as usize];
         map_updated_event_writer.send(MapUpdatedEvent {});
+    }
+}
+
+pub fn change_pathfinding_algorithm_system(
+    mut pathfinding_algorithm_selection_changed_event_reader: EventReader<
+        PathfindingAlgorithmSelectionChangedEvent,
+    >,
+    mut pathfinding_algorithm_changed_event_writer: EventWriter<PathfindingAlgorithmChangedEvent>,
+    mut game_state: ResMut<GameState>,
+) {
+    for pathfinding_algorithm_selection_changed_event in
+        pathfinding_algorithm_selection_changed_event_reader.iter()
+    {
+        match pathfinding_algorithm_selection_changed_event.pathfinding_algorithm {
+            PathfindingAlgorithm::AStar => {
+                game_state.pathfinding_algorithm = PathfindingAlgorithm::AStar;
+            }
+            PathfindingAlgorithm::BFS => {
+                game_state.pathfinding_algorithm = PathfindingAlgorithm::BFS;
+            }
+            PathfindingAlgorithm::Dijkstra => {
+                game_state.pathfinding_algorithm = PathfindingAlgorithm::Dijkstra;
+            }
+        }
+        pathfinding_algorithm_changed_event_writer.send(PathfindingAlgorithmChangedEvent {});
     }
 }

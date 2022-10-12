@@ -54,6 +54,8 @@ fn main() {
         .add_event::<SolveEvent>()
         .add_event::<ResetEvent>()
         .add_event::<ClearEvent>()
+        .add_event::<CycleAlgorithmLeftEvent>()
+        .add_event::<CycleAlgorithmRightEvent>()
         .add_startup_system(setup_physics)
         .add_startup_system(setup_map.label(Setup::Map))
         .add_startup_system(setup_tilemap.label(Setup::TileMap))
@@ -84,5 +86,11 @@ fn main() {
         .add_system(solve_button_system)
         .add_system(reset_button_system)
         .add_system(clear_button_system)
+        .add_system(change_pathfinding_algorithm_system)
+        .add_system(cycle_algorithm_left_button_system)
+        .add_system(cycle_algorithm_right_button_system)
+        .add_system(cycle_algorithm_selection_system)
+        .add_system(update_current_algorithm_text_system)
+        .add_system(send_ui_interaction_events_system)
         .run();
 }
