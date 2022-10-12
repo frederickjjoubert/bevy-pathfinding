@@ -56,6 +56,8 @@ fn main() {
         .add_event::<ClearEvent>()
         .add_event::<CycleAlgorithmLeftEvent>()
         .add_event::<CycleAlgorithmRightEvent>()
+        .add_event::<PathfindingAlgorithmSelectionChangedEvent>()
+        .add_event::<PathfindingAlgorithmChangedEvent>()
         .add_startup_system(setup_physics)
         .add_startup_system(setup_map.label(Setup::Map))
         .add_startup_system(setup_tilemap.label(Setup::TileMap))

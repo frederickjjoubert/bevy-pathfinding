@@ -59,10 +59,17 @@ impl Map {
                     continue;
                 }
                 let neighbor_cost = self.costs[neighbor_index];
-                successors.push(Successor {
-                    position: neighbor_position,
-                    cost: neighbor_cost,
-                })
+                if let Some(neighbor_cost) = neighbor_cost {
+                    successors.push(Successor {
+                        position: neighbor_position,
+                        cost: neighbor_cost,
+                    })
+                } else {
+                    successors.push(Successor {
+                        position: neighbor_position,
+                        cost: 1,
+                    })
+                }
             }
         }
 
@@ -73,10 +80,16 @@ impl Map {
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Position(pub i32, pub i32);
 
+impl Position {
+    pub fn distance(&self, other: &Position) -> i32 {
+        (self.0.abs_diff(other.0) + self.1.abs_diff(other.1)) as i32
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd)]
 pub struct Successor {
     pub position: Position,
-    pub cost: Option<i32>,
+    pub cost: i32,
 }
 
 /// === Systems ===

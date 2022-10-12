@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use pathfinding::prelude::bfs;
+use pathfinding::prelude::{astar, bfs, dijkstra};
 
 use super::{
     world_position_to_index, Map, MapUpdatedEvent, Mouse, Position, UserInterfaceInteractionEvent,
@@ -79,9 +79,13 @@ pub fn placement_system(
     for _ in user_interface_interaction_event_reader.iter() {
         return;
     }
-    // if mouse_input.just_pressed(MouseButton::Left)
     if mouse.holding_lmb {
         let (x, y) = world_position_to_index(mouse.world_position);
+        let clicked_position = Position(x, y);
+        // Prevent placing on start or goal:
+        if clicked_position == game_state.start || clicked_position == game_state.goal {
+            return;
+        }
         // println!("clicked index x: {}, y: {}", x, y);
         match game_state.placement_mode {
             PlacementMode::Path => {
@@ -119,6 +123,7 @@ pub fn step_system(
     }
 }
 
+// See Reference 1
 pub fn solve_system(
     mut solve_event_reader: EventReader<SolveEvent>,
     mut map_updated_event_writer: EventWriter<MapUpdatedEvent>,
@@ -129,23 +134,67 @@ pub fn solve_system(
         println!("Attempting to solve...");
         let start = game_state.start;
         let goal = game_state.goal;
-        let result = bfs(
-            &start,
-            |p| {
-                map.get_successors(p)
-                    .iter()
-                    .map(|successor| successor.position)
-                    .collect::<Vec<_>>()
-            },
-            |p| *p == goal,
-        );
-
-        if let Some(result) = result {
-            println!("Result: {:?}", result);
-            game_state.path = result;
-            map_updated_event_writer.send(MapUpdatedEvent {});
-        } else {
-            println!("No Path Found!");
+        match game_state.pathfinding_algorithm {
+            PathfindingAlgorithm::AStar => {
+                let result = astar(
+                    &start,
+                    |position| {
+                        map.get_successors(position)
+                            .iter()
+                            .map(|successor| (successor.position, successor.cost))
+                            .collect::<Vec<_>>()
+                    },
+                    |position| position.distance(&goal),
+                    |position| *position == goal,
+                );
+                if let Some(result) = result {
+                    println!("Path: {:?}", result.0);
+                    println!("Cost: {:?}", result.1);
+                    game_state.path = result.0;
+                    map_updated_event_writer.send(MapUpdatedEvent {});
+                } else {
+                    println!("No Path Found!");
+                }
+            }
+            PathfindingAlgorithm::BFS => {
+                let result = bfs(
+                    &start,
+                    |position| {
+                        map.get_successors(position)
+                            .iter()
+                            .map(|successor| successor.position)
+                            .collect::<Vec<_>>()
+                    },
+                    |position| *position == goal,
+                );
+                if let Some(result) = result {
+                    println!("Path: {:?}", result);
+                    game_state.path = result;
+                    map_updated_event_writer.send(MapUpdatedEvent {});
+                } else {
+                    println!("No Path Found!");
+                }
+            }
+            PathfindingAlgorithm::Dijkstra => {
+                let result = dijkstra(
+                    &start,
+                    |position| {
+                        map.get_successors(position)
+                            .iter()
+                            .map(|successor| (successor.position, successor.cost))
+                            .collect::<Vec<_>>()
+                    },
+                    |position| *position == goal,
+                );
+                if let Some(result) = result {
+                    println!("Path: {:?}", result.0);
+                    println!("Cost: {:?}", result.1);
+                    game_state.path = result.0;
+                    map_updated_event_writer.send(MapUpdatedEvent {});
+                } else {
+                    println!("No Path Found!");
+                }
+            }
         }
     }
 }
@@ -154,14 +203,9 @@ pub fn reset_system(
     mut reset_event_reader: EventReader<ResetEvent>,
     mut map_updated_event_writer: EventWriter<MapUpdatedEvent>,
     mut game_state: ResMut<GameState>,
-    mut map: ResMut<Map>,
 ) {
     for _ in reset_event_reader.iter() {
         game_state.path = Vec::new();
-        game_state.start = Position(16, 32);
-        game_state.goal = Position(48, 32);
-        map.costs = vec![None; (map.width * map.height) as usize];
-        map.blocked = vec![false; (map.width * map.height) as usize];
         map_updated_event_writer.send(MapUpdatedEvent {});
     }
 }
@@ -174,6 +218,9 @@ pub fn clear_system(
 ) {
     for _ in clear_event_reader.iter() {
         game_state.path = Vec::new();
+        game_state.start = Position(16, 32);
+        game_state.goal = Position(48, 32);
+        map.costs = vec![None; (map.width * map.height) as usize];
         map.blocked = vec![false; (map.width * map.height) as usize];
         map_updated_event_writer.send(MapUpdatedEvent {});
     }
@@ -184,6 +231,7 @@ pub fn change_pathfinding_algorithm_system(
         PathfindingAlgorithmSelectionChangedEvent,
     >,
     mut pathfinding_algorithm_changed_event_writer: EventWriter<PathfindingAlgorithmChangedEvent>,
+    mut reset_event_writer: EventWriter<ResetEvent>,
     mut game_state: ResMut<GameState>,
 ) {
     for pathfinding_algorithm_selection_changed_event in
@@ -201,5 +249,15 @@ pub fn change_pathfinding_algorithm_system(
             }
         }
         pathfinding_algorithm_changed_event_writer.send(PathfindingAlgorithmChangedEvent {});
+        reset_event_writer.send(ResetEvent {});
     }
 }
+
+// References
+// 1. Pathfinding Docs
+// https://docs.rs/pathfinding/latest/pathfinding/directed/astar/fn.astar.html
+// https://docs.rs/pathfinding/latest/pathfinding/directed/bfs/index.html
+// https://docs.rs/pathfinding/latest/pathfinding/directed/dijkstra/index.html
+// 2. Pathfinding in Rust: A tutorial with examples
+// https://blog.logrocket.com/pathfinding-rust-tutorial-examples/
+// https://github.com/gregstoll/rust-pathfinding

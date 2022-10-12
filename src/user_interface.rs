@@ -876,9 +876,8 @@ pub fn cycle_algorithm_selection_system(
     >,
     game_state: Res<GameState>,
 ) {
-    let mut new_pathfinding_algorithm: PathfindingAlgorithm =
-        game_state.pathfinding_algorithm.clone();
     for _ in cycle_algorithm_left_event_reader.iter() {
+        let new_pathfinding_algorithm;
         match game_state.pathfinding_algorithm {
             PathfindingAlgorithm::AStar => {
                 new_pathfinding_algorithm = PathfindingAlgorithm::Dijkstra
@@ -886,8 +885,14 @@ pub fn cycle_algorithm_selection_system(
             PathfindingAlgorithm::BFS => new_pathfinding_algorithm = PathfindingAlgorithm::AStar,
             PathfindingAlgorithm::Dijkstra => new_pathfinding_algorithm = PathfindingAlgorithm::BFS,
         }
+        pathfinding_algorithm_selection_changed_event_writer.send(
+            PathfindingAlgorithmSelectionChangedEvent {
+                pathfinding_algorithm: new_pathfinding_algorithm,
+            },
+        );
     }
     for _ in cycle_algorithm_right_event_reader.iter() {
+        let new_pathfinding_algorithm;
         match game_state.pathfinding_algorithm {
             PathfindingAlgorithm::AStar => new_pathfinding_algorithm = PathfindingAlgorithm::BFS,
             PathfindingAlgorithm::BFS => new_pathfinding_algorithm = PathfindingAlgorithm::Dijkstra,
@@ -895,12 +900,12 @@ pub fn cycle_algorithm_selection_system(
                 new_pathfinding_algorithm = PathfindingAlgorithm::AStar
             }
         }
+        pathfinding_algorithm_selection_changed_event_writer.send(
+            PathfindingAlgorithmSelectionChangedEvent {
+                pathfinding_algorithm: new_pathfinding_algorithm,
+            },
+        );
     }
-    pathfinding_algorithm_selection_changed_event_writer.send(
-        PathfindingAlgorithmSelectionChangedEvent {
-            pathfinding_algorithm: new_pathfinding_algorithm,
-        },
-    );
 }
 
 pub fn update_current_algorithm_text_system(
@@ -911,8 +916,12 @@ pub fn update_current_algorithm_text_system(
     for _ in pathfinding_algorithm_changed_event_reader.iter() {
         for mut text in &mut current_algorithm_text_query {
             match game_state.pathfinding_algorithm {
-                PathfindingAlgorithm::AStar => {}
-                PathfindingAlgorithm::BFS => {}
+                PathfindingAlgorithm::AStar => {
+                    text.sections[0].value = "AStar".to_string();
+                }
+                PathfindingAlgorithm::BFS => {
+                    text.sections[0].value = "BFS".to_string();
+                }
                 PathfindingAlgorithm::Dijkstra => {
                     text.sections[0].value = "Dijkstra".to_string();
                 }
