@@ -3,6 +3,8 @@
 This is a prototype of using the Rust [pathfinding](https://crates.io/crates/pathfinding) crate with
 the [Bevy game engine](https://crates.io/crates/bevy).
 
+![Bevy_Path_Finding_Example_Project.png](./assets/images/Bevy_Path_Finding_Example_Project.png)
+
 # Tooling
 
 ## clippy
