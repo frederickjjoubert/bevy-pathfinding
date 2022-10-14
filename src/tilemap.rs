@@ -53,6 +53,19 @@ pub fn setup_tilemap(mut commands: Commands, asset_server: Res<AssetServer>) {
                     TILE_SIZE as f32 / 2.0,
                     TILE_SIZE as f32 / 2.0,
                 ))
+                .insert_bundle(Text2dBundle {
+                    text: Text::from_section(
+                        "0",
+                        TextStyle {
+                            font: asset_server.load("fonts/FiraSans/FiraSans-Bold.ttf"),
+                            font_size: 12.0,
+                            color: Color::RED,
+                        },
+                    )
+                    .with_alignment(TextAlignment::CENTER),
+                    transform: Transform::from_xyz(world_position.x, world_position.y, 1.0),
+                    ..default()
+                })
                 .id();
             tile_storage.set(&tile_position, Some(tile_entity));
         }
