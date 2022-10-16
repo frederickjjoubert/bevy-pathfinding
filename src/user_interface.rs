@@ -1,6 +1,7 @@
 use crate::{
-    CycleAlgorithmLeftEvent, CycleAlgorithmRightEvent, PathfindingAlgorithm,
-    PathfindingAlgorithmChangedEvent, PathfindingAlgorithmSelectionChangedEvent,
+    world_position_to_index, CycleAlgorithmLeftEvent, CycleAlgorithmRightEvent, Map,
+    MapUpdatedEvent, Mouse, PathfindingAlgorithm, PathfindingAlgorithmChangedEvent,
+    PathfindingAlgorithmSelectionChangedEvent, Position,
 };
 use bevy::prelude::*;
 use bevy::ui::Display::Flex;
@@ -23,6 +24,12 @@ pub struct OriginButton {}
 
 #[derive(Component, Debug)]
 pub struct GoalButton {}
+
+#[derive(Component, Debug)]
+pub struct IncreaseCostButton {}
+
+#[derive(Component, Debug)]
+pub struct DecreaseCostButton {}
 
 #[derive(Component, Debug)]
 pub struct StepButton {}
@@ -614,11 +621,81 @@ pub fn setup_user_interface(mut commands: Commands, asset_server: Res<AssetServe
         .entity(goal_button_container)
         .push_children(&[goal_button]);
 
+    // Increase Cost Button
+    let increase_cost_button_container = commands
+        .spawn_bundle(NodeBundle {
+            style: button_container_style.clone(),
+            color: Color::NONE.into(),
+            ..default()
+        })
+        .insert(Name::new("Increase Cost Button Container"))
+        .id();
+
+    let increase_cost_button = commands
+        .spawn_bundle(ButtonBundle {
+            style: button_style.clone(),
+            color: Color::rgb(0.15, 0.15, 0.15).into(),
+            ..default()
+        })
+        .insert(Name::new("Increase Cost Button"))
+        .insert(IncreaseCostButton {})
+        .id();
+
+    let increase_cost_button_text = commands
+        .spawn_bundle(TextBundle::from_section(
+            "+ Cost",
+            button_text_style.clone(),
+        ))
+        .id();
+
+    commands
+        .entity(increase_cost_button)
+        .push_children(&[increase_cost_button_text]);
+    commands
+        .entity(increase_cost_button_container)
+        .push_children(&[increase_cost_button]);
+
+    // Decrease Cost Button
+    let decrease_cost_button_container = commands
+        .spawn_bundle(NodeBundle {
+            style: button_container_style.clone(),
+            color: Color::NONE.into(),
+            ..default()
+        })
+        .insert(Name::new("Decrease Cost Button Container"))
+        .id();
+
+    let decrease_cost_button = commands
+        .spawn_bundle(ButtonBundle {
+            style: button_style.clone(),
+            color: Color::rgb(0.15, 0.15, 0.15).into(),
+            ..default()
+        })
+        .insert(Name::new("Decrease Cost Button"))
+        .insert(DecreaseCostButton {})
+        .id();
+
+    let decrease_cost_button_text = commands
+        .spawn_bundle(TextBundle::from_section(
+            "- Cost",
+            button_text_style.clone(),
+        ))
+        .id();
+
+    commands
+        .entity(decrease_cost_button)
+        .push_children(&[decrease_cost_button_text]);
+    commands
+        .entity(decrease_cost_button_container)
+        .push_children(&[decrease_cost_button]);
+
     commands.entity(bottom_container).push_children(&[
         open_button_container,
         obstacle_button_container,
         origin_button_container,
         goal_button_container,
+        increase_cost_button_container,
+        decrease_cost_button_container,
     ]);
 
     commands.entity(top_buttons_container).push_children(&[
@@ -719,6 +796,51 @@ pub fn goal_button_system(
             Interaction::Clicked => {
                 *color = PRESSED_BUTTON.into();
                 game_state.placement_mode = PlacementMode::Goal;
+            }
+            Interaction::Hovered => {
+                *color = HOVERED_BUTTON.into();
+            }
+            Interaction::None => {
+                *color = NORMAL_BUTTON.into();
+            }
+        }
+    }
+}
+
+pub fn increase_cost_button_system(
+    mut increase_cost_button_query: Query<
+        (&Interaction, &mut UiColor),
+        (Changed<Interaction>, With<IncreaseCostButton>),
+    >,
+    mut game_state: ResMut<GameState>,
+) {
+    for (interaction, mut color) in increase_cost_button_query.iter_mut() {
+        match *interaction {
+            Interaction::Clicked => {
+                game_state.placement_mode = PlacementMode::IncreaseCost;
+            }
+            Interaction::Hovered => {
+                *color = HOVERED_BUTTON.into();
+            }
+            Interaction::None => {
+                *color = NORMAL_BUTTON.into();
+            }
+        }
+    }
+}
+
+pub fn decrease_cost_button_system(
+    mut decrease_cost_button_query: Query<
+        (&Interaction, &mut UiColor),
+        (Changed<Interaction>, With<DecreaseCostButton>),
+    >,
+    mut game_state: ResMut<GameState>,
+) {
+    for (interaction, mut color) in decrease_cost_button_query.iter_mut() {
+        match *interaction {
+            Interaction::Clicked => {
+                *color = PRESSED_BUTTON.into();
+                game_state.placement_mode = PlacementMode::DecreaseCost;
             }
             Interaction::Hovered => {
                 *color = HOVERED_BUTTON.into();

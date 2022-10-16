@@ -28,6 +28,7 @@ enum Setup {
     Game,
     Map,
     TileMap,
+    CostsTileMap,
 }
 
 fn main() {
@@ -60,18 +61,22 @@ fn main() {
         .add_event::<PathfindingAlgorithmChangedEvent>()
         .add_startup_system(setup_physics)
         .add_startup_system(setup_map.label(Setup::Map))
-        .add_startup_system(setup_tilemap.label(Setup::TileMap))
+        .add_startup_system(setup_path_tilemap.label(Setup::TileMap))
+        .add_startup_system(setup_costs_tilemap.label(Setup::CostsTileMap))
         .add_startup_system(setup_mouse)
         .add_startup_system(
             setup_game
                 .label(Setup::Game)
                 .after(Setup::Map)
-                .after(Setup::TileMap),
+                .after(Setup::TileMap)
+                .after(Setup::CostsTileMap),
         )
         .add_startup_system(setup_camera)
         .add_startup_system(setup_user_interface)
-        .add_system(draw_tilemap)
+        .add_system(draw_path_tilemap)
+        .add_system(update_cost_tilemap)
         .add_system(placement_system)
+        .add_system(cost_system)
         .add_system(step_system)
         .add_system(solve_system)
         .add_system(reset_system)
@@ -84,6 +89,8 @@ fn main() {
         .add_system(obstacle_button_system)
         .add_system(start_button_system)
         .add_system(goal_button_system)
+        .add_system(increase_cost_button_system)
+        .add_system(decrease_cost_button_system)
         .add_system(step_button_system)
         .add_system(solve_button_system)
         .add_system(reset_button_system)
@@ -93,6 +100,7 @@ fn main() {
         .add_system(cycle_algorithm_right_button_system)
         .add_system(cycle_algorithm_selection_system)
         .add_system(update_current_algorithm_text_system)
+        .add_system(show_hide_cost_tilemap)
         .add_system(send_ui_interaction_events_system)
         .run();
 }

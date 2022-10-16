@@ -21,7 +21,7 @@ impl Map {
         Map {
             width,
             height,
-            costs: vec![None; (width * height) as usize],
+            costs: vec![Some(1); (width * height) as usize],
             blocked: vec![false; (width * height) as usize],
             allow_diagonals,
         }

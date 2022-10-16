@@ -30,19 +30,19 @@ pub fn camera_movement_system(
     // Update the camera position based on the keyboard input.
     let mut movement_delta = Vec3::new(0.0, 0.0, 0.0);
     // Up
-    if keyboard.pressed(KeyCode::W) {
+    if keyboard.pressed(KeyCode::W) || keyboard.pressed(KeyCode::Up) {
         movement_delta.y += 1.0;
     }
     // Down
-    else if keyboard.pressed(KeyCode::S) {
+    else if keyboard.pressed(KeyCode::S) || keyboard.pressed(KeyCode::Down) {
         movement_delta.y -= 1.0;
     }
     // Left
-    if keyboard.pressed(KeyCode::A) {
+    if keyboard.pressed(KeyCode::A) || keyboard.pressed(KeyCode::Left) {
         movement_delta.x -= 1.0;
     }
     // Right
-    else if keyboard.pressed(KeyCode::D) {
+    else if keyboard.pressed(KeyCode::D) || keyboard.pressed(KeyCode::Right) {
         movement_delta.x += 1.0;
     }
 
@@ -67,8 +67,8 @@ pub fn camera_movement_system(
     // println!("min_x: {}, min_y: {}, max_x: {}, max_y: {}", min_x, min_y, max_x, max_y);
 
     // Bound the Camera Movement
-    camera_transform.translation.x = max_x.min(min_x.max(camera_transform.translation.x));
-    camera_transform.translation.y = max_y.min(min_y.max(camera_transform.translation.y));
+    // camera_transform.translation.x = max_x.min(min_x.max(camera_transform.translation.x));
+    // camera_transform.translation.y = max_y.min(min_y.max(camera_transform.translation.y));
 
     // println!("Camera Position: {:?}", camera_transform.translation);
 }

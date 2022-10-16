@@ -55,6 +55,7 @@ pub struct PathfindingAlgorithmChangedEvent {}
 pub fn setup_game(
     mut commands: Commands,
     mut map_updated_event_writer: EventWriter<MapUpdatedEvent>,
+    mut pathfinding_algorithm_changed_event: EventWriter<PathfindingAlgorithmChangedEvent>,
 ) {
     println!("Setup Game...");
     commands.insert_resource(GameState {
@@ -66,6 +67,7 @@ pub fn setup_game(
         step: 0,
     });
     map_updated_event_writer.send(MapUpdatedEvent {});
+    pathfinding_algorithm_changed_event.send(PathfindingAlgorithmChangedEvent {});
 }
 
 pub fn placement_system(
@@ -101,6 +103,48 @@ pub fn placement_system(
             }
             PlacementMode::Goal => {
                 game_state.goal = Position(x, y);
+            }
+            _ => {
+                // Do Nothing
+            }
+        }
+        game_state.path = Vec::new();
+        map_updated_event_writer.send(MapUpdatedEvent {});
+    }
+}
+pub fn cost_system(
+    mut user_interface_interaction_event_reader: EventReader<UserInterfaceInteractionEvent>,
+    mut map_updated_event_writer: EventWriter<MapUpdatedEvent>,
+    mouse: Res<Mouse>,
+    mouse_input: Res<Input<MouseButton>>,
+    mut game_state: ResMut<GameState>,
+    mut map: ResMut<Map>,
+) {
+    // This is a hack to prevent placement when buttons are clicked.
+    for _ in user_interface_interaction_event_reader.iter() {
+        return;
+    }
+    if mouse_input.just_pressed(MouseButton::Left) {
+        let (x, y) = world_position_to_index(mouse.world_position);
+        let clicked_position = Position(x, y);
+        // Prevent placing on start or goal:
+        if clicked_position == game_state.start || clicked_position == game_state.goal {
+            return;
+        }
+        match game_state.placement_mode {
+            PlacementMode::IncreaseCost => {
+                let index = map.xy_idx(x, y);
+                if let Some(current_cost) = map.costs[index] {
+                    map.costs[index] = Some(current_cost + 1);
+                }
+            }
+            PlacementMode::DecreaseCost => {
+                let index = map.xy_idx(x, y);
+                if let Some(current_cost) = map.costs[index] {
+                    if current_cost > 1 {
+                        map.costs[index] = Some(current_cost - 1);
+                    }
+                }
             }
             _ => {
                 // Do Nothing
@@ -199,6 +243,7 @@ pub fn solve_system(
     }
 }
 
+// Reset the Path Solve
 pub fn reset_system(
     mut reset_event_reader: EventReader<ResetEvent>,
     mut map_updated_event_writer: EventWriter<MapUpdatedEvent>,
@@ -210,6 +255,7 @@ pub fn reset_system(
     }
 }
 
+// Clear Everything
 pub fn clear_system(
     mut clear_event_reader: EventReader<ClearEvent>,
     mut map_updated_event_writer: EventWriter<MapUpdatedEvent>,
@@ -220,7 +266,7 @@ pub fn clear_system(
         game_state.path = Vec::new();
         game_state.start = Position(16, 32);
         game_state.goal = Position(48, 32);
-        map.costs = vec![None; (map.width * map.height) as usize];
+        map.costs = vec![Some(1); (map.width * map.height) as usize];
         map.blocked = vec![false; (map.width * map.height) as usize];
         map_updated_event_writer.send(MapUpdatedEvent {});
     }
