@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy::render::camera::RenderTarget;
 
+// === Resources ===
 pub struct Mouse {
     pub is_in_window: bool,
     pub window_position: Vec2,
@@ -10,6 +11,7 @@ pub struct Mouse {
     pub holding_rmb: bool,
 }
 
+// === Systems ===
 pub fn setup_mouse(mut commands: Commands) {
     commands.insert_resource(Mouse {
         is_in_window: false,

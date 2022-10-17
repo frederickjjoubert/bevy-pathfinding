@@ -95,6 +95,6 @@ pub struct Successor {
 /// === Systems ===
 pub fn setup_map(mut commands: Commands) {
     println!("Setup Map...");
-    let mut map = Map::new(MAP_WIDTH, MAP_HEIGHT, false);
+    let map = Map::new(MAP_WIDTH, MAP_HEIGHT, false);
     commands.insert_resource(map);
 }

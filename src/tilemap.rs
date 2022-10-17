@@ -1,13 +1,11 @@
-use super::{GameState, MapUpdatedEvent, Position};
-use crate::{
-    PathfindingAlgorithm, PathfindingAlgorithmChangedEvent,
-    PathfindingAlgorithmSelectionChangedEvent,
-};
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-use super::{Map, MAP_HEIGHT, MAP_WIDTH};
+use super::{
+    GameState, Map, MapUpdatedEvent, PathfindingAlgorithm, PathfindingAlgorithmChangedEvent,
+    Position, MAP_HEIGHT, MAP_WIDTH,
+};
 
 pub const TILE_SIZE: i32 = 32;
 
@@ -205,14 +203,25 @@ pub fn draw_path_tilemap(
                     }
                 }
             }
-            for point in &game_state.path {
-                let tile_position = TilePos::new(point.0 as u32, point.1 as u32);
-                if let Some(tile_entity) = tile_storage.get(&tile_position) {
-                    if let Ok(mut tile_texture) = tile_texture_query.get_mut(tile_entity) {
-                        tile_texture.0 = 5;
+            if !game_state.path.is_empty() {
+                for i in 1..game_state.step {
+                    let point = game_state.path[i];
+                    let tile_position = TilePos::new(point.0 as u32, point.1 as u32);
+                    if let Some(tile_entity) = tile_storage.get(&tile_position) {
+                        if let Ok(mut tile_texture) = tile_texture_query.get_mut(tile_entity) {
+                            tile_texture.0 = 5;
+                        }
                     }
                 }
             }
+            // for point in &game_state.path {
+            //     let tile_position = TilePos::new(point.0 as u32, point.1 as u32);
+            //     if let Some(tile_entity) = tile_storage.get(&tile_position) {
+            //         if let Ok(mut tile_texture) = tile_texture_query.get_mut(tile_entity) {
+            //             tile_texture.0 = 5;
+            //         }
+            //     }
+            // }
             let start: &Position = &game_state.start;
             let tile_position = TilePos::new(start.0 as u32, start.1 as u32);
             if let Some(tile_entity) = tile_storage.get(&tile_position) {
@@ -257,13 +266,13 @@ pub fn show_hide_cost_tilemap(
     for _ in pathfinding_algorithm_changed_event_reader.iter() {
         match game_state.pathfinding_algorithm {
             PathfindingAlgorithm::BFS => {
-                for mut cost_tile_visiblilty in cost_tile_query.iter_mut() {
-                    cost_tile_visiblilty.is_visible = false;
+                for mut cost_tile_visibility in cost_tile_query.iter_mut() {
+                    cost_tile_visibility.is_visible = false;
                 }
             }
             _ => {
-                for mut cost_tile_visiblilty in cost_tile_query.iter_mut() {
-                    cost_tile_visiblilty.is_visible = true;
+                for mut cost_tile_visibility in cost_tile_query.iter_mut() {
+                    cost_tile_visibility.is_visible = true;
                 }
             }
         }

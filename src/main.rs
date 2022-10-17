@@ -46,7 +46,7 @@ fn main() {
         .add_plugin(WorldInspectorPlugin::new()) // bevy_inspector_egui
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(
             TILE_SIZE as f32,
-        )) // bevy_rapier2d
+        )) // bevy_rapier2d, see https://rapier.rs/docs/user_guides/bevy_plugin/common_mistakes#why-is-everything-moving-in-slow-motion
         // .add_plugin(RapierDebugRenderPlugin::default())// bevy_rapier2d debugger
         .add_plugin(TilemapPlugin) // bevy_ecs_tilemap
         .add_event::<MapUpdatedEvent>()
@@ -91,6 +91,7 @@ fn main() {
         .add_system(goal_button_system)
         .add_system(increase_cost_button_system)
         .add_system(decrease_cost_button_system)
+        .add_system(show_hide_increase_decrease_cost_buttons)
         .add_system(step_button_system)
         .add_system(solve_button_system)
         .add_system(reset_button_system)

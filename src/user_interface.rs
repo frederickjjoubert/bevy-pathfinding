@@ -1,12 +1,11 @@
-use crate::{
-    world_position_to_index, CycleAlgorithmLeftEvent, CycleAlgorithmRightEvent, Map,
-    MapUpdatedEvent, Mouse, PathfindingAlgorithm, PathfindingAlgorithmChangedEvent,
-    PathfindingAlgorithmSelectionChangedEvent, Position,
-};
 use bevy::prelude::*;
 use bevy::ui::Display::Flex;
 
-use super::{ClearEvent, GameState, PlacementMode, ResetEvent, SolveEvent, StepEvent};
+use super::{
+    ClearEvent, CycleAlgorithmLeftEvent, CycleAlgorithmRightEvent, GameState, PathfindingAlgorithm,
+    PathfindingAlgorithmChangedEvent, PathfindingAlgorithmSelectionChangedEvent, PlacementMode,
+    ResetEvent, SolveEvent, StepEvent,
+};
 
 const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
 const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
@@ -847,6 +846,40 @@ pub fn decrease_cost_button_system(
             }
             Interaction::None => {
                 *color = NORMAL_BUTTON.into();
+            }
+        }
+    }
+}
+
+pub fn show_hide_increase_decrease_cost_buttons(
+    mut pathfinding_algorithm_changed_event_reader: EventReader<PathfindingAlgorithmChangedEvent>,
+    mut increase_cost_button_query: Query<
+        &mut Visibility,
+        (With<IncreaseCostButton>, Without<DecreaseCostButton>),
+    >,
+    mut decrease_cost_button_query: Query<
+        &mut Visibility,
+        (With<DecreaseCostButton>, Without<IncreaseCostButton>),
+    >,
+    game_state: Res<GameState>,
+) {
+    for _ in pathfinding_algorithm_changed_event_reader.iter() {
+        match game_state.pathfinding_algorithm {
+            PathfindingAlgorithm::BFS => {
+                for mut visibility in increase_cost_button_query.iter_mut() {
+                    visibility.is_visible = false;
+                }
+                for mut visibility in decrease_cost_button_query.iter_mut() {
+                    visibility.is_visible = false;
+                }
+            }
+            _ => {
+                for mut visibility in increase_cost_button_query.iter_mut() {
+                    visibility.is_visible = true;
+                }
+                for mut visibility in decrease_cost_button_query.iter_mut() {
+                    visibility.is_visible = true;
+                }
             }
         }
     }

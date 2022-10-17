@@ -22,6 +22,7 @@ pub enum PlacementMode {
     DecreaseCost,
 }
 
+// === Resources ===
 #[derive(Debug)]
 pub struct GameState {
     pub pathfinding_algorithm: PathfindingAlgorithm,
@@ -29,7 +30,7 @@ pub struct GameState {
     pub start: Position,
     pub goal: Position,
     pub path: Vec<Position>,
-    pub step: i32,
+    pub step: usize,
 }
 
 // === Events ===
@@ -161,9 +162,14 @@ pub fn step_system(
     mut game_state: ResMut<GameState>,
 ) {
     for _ in step_event_reader.iter() {
-        // TODO: Wrap around
-        game_state.step = game_state.step + 1;
-        map_updated_event_writer.send(MapUpdatedEvent {});
+        if !game_state.path.is_empty() {
+            if game_state.step < game_state.path.len() - 1 {
+                game_state.step = game_state.step + 1;
+            } else {
+                game_state.step = 2; // Why 2? Me Dumb?
+            }
+            map_updated_event_writer.send(MapUpdatedEvent {});
+        }
     }
 }
 
@@ -195,9 +201,11 @@ pub fn solve_system(
                     println!("Path: {:?}", result.0);
                     println!("Cost: {:?}", result.1);
                     game_state.path = result.0;
-                    map_updated_event_writer.send(MapUpdatedEvent {});
+                    game_state.step = game_state.path.len();
                 } else {
                     println!("No Path Found!");
+                    game_state.path = Vec::new();
+                    game_state.step = 0;
                 }
             }
             PathfindingAlgorithm::BFS => {
@@ -214,9 +222,11 @@ pub fn solve_system(
                 if let Some(result) = result {
                     println!("Path: {:?}", result);
                     game_state.path = result;
-                    map_updated_event_writer.send(MapUpdatedEvent {});
+                    game_state.step = game_state.path.len();
                 } else {
                     println!("No Path Found!");
+                    game_state.path = Vec::new();
+                    game_state.step = 0;
                 }
             }
             PathfindingAlgorithm::Dijkstra => {
@@ -234,12 +244,15 @@ pub fn solve_system(
                     println!("Path: {:?}", result.0);
                     println!("Cost: {:?}", result.1);
                     game_state.path = result.0;
-                    map_updated_event_writer.send(MapUpdatedEvent {});
+                    game_state.step = game_state.path.len();
                 } else {
                     println!("No Path Found!");
+                    game_state.path = Vec::new();
+                    game_state.step = 0;
                 }
             }
         }
+        map_updated_event_writer.send(MapUpdatedEvent {});
     }
 }
 

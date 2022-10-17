@@ -22,7 +22,6 @@ pub fn setup_camera(mut commands: Commands) {
 // TODO: Make sure this works frame rate independently with a fixed time step.
 pub fn camera_movement_system(
     keyboard: Res<Input<KeyCode>>,
-    windows: ResMut<Windows>,
     mut camera_query: Query<&mut Transform, With<Camera>>,
 ) {
     let mut camera_transform = camera_query.single_mut();
@@ -52,25 +51,6 @@ pub fn camera_movement_system(
         movement_delta *= CAMERA_MOVEMENT_SPEED;
     }
     camera_transform.translation += movement_delta;
-
-    // Get the primary window.
-    let window = windows.get_primary().unwrap();
-    // Get the size of the window.
-    let window_width = window.width();
-    let window_height = window.height();
-
-    let buffer = 16.0;
-    let min_x = 0.0 + (window_width / 2.0) - buffer;
-    let min_y = 0.0 + (window_height / 2.0) - buffer;
-    let max_x = (MAP_WIDTH as f32 * TILE_SIZE as f32) - (window_width / 2.0) + buffer;
-    let max_y = (MAP_HEIGHT as f32 * TILE_SIZE as f32) - (window_height / 2.0) + buffer;
-    // println!("min_x: {}, min_y: {}, max_x: {}, max_y: {}", min_x, min_y, max_x, max_y);
-
-    // Bound the Camera Movement
-    // camera_transform.translation.x = max_x.min(min_x.max(camera_transform.translation.x));
-    // camera_transform.translation.y = max_y.min(min_y.max(camera_transform.translation.y));
-
-    // println!("Camera Position: {:?}", camera_transform.translation);
 }
 
 // References
