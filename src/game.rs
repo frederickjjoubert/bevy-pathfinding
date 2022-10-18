@@ -189,7 +189,7 @@ pub fn solve_system(
                 let result = astar(
                     &start,
                     |position| {
-                        map.get_successors(position)
+                        map.get_successors(position, map.allow_diagonals)
                             .iter()
                             .map(|successor| (successor.position, successor.cost))
                             .collect::<Vec<_>>()
@@ -212,7 +212,7 @@ pub fn solve_system(
                 let result = bfs(
                     &start,
                     |position| {
-                        map.get_successors(position)
+                        map.get_successors(position, map.allow_diagonals)
                             .iter()
                             .map(|successor| successor.position)
                             .collect::<Vec<_>>()
@@ -233,7 +233,7 @@ pub fn solve_system(
                 let result = dijkstra(
                     &start,
                     |position| {
-                        map.get_successors(position)
+                        map.get_successors(position, map.allow_diagonals)
                             .iter()
                             .map(|successor| (successor.position, successor.cost))
                             .collect::<Vec<_>>()

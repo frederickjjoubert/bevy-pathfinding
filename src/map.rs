@@ -31,7 +31,7 @@ impl Map {
         (y as usize * self.width as usize) + x as usize
     }
 
-    pub fn get_successors(&self, position: &Position) -> Vec<Successor> {
+    pub fn get_successors(&self, position: &Position, allow_diagonals: bool) -> Vec<Successor> {
         let mut successors = Vec::new();
 
         for dy in -1..=1 {
@@ -41,7 +41,7 @@ impl Map {
                 if dx == 0 && dy == 0 {
                     continue;
                 } // Exclude current position.
-                if !self.allow_diagonals {
+                if !allow_diagonals {
                     if (dx + dy).abs() != 1 {
                         continue;
                     } // Exclude diagonals.
@@ -72,7 +72,6 @@ impl Map {
                 }
             }
         }
-
         successors
     }
 }
